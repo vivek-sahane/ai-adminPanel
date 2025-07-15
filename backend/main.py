@@ -5,6 +5,7 @@ from database.schemas import all_tasks
 from database.models import AI
 from bson.objectid import ObjectId
 from datetime import datetime
+from fastapi.responses import JSONResponse
 
 
 app = FastAPI()
@@ -50,6 +51,8 @@ async def updated_task(task_id: str, updated_task: AI):
         return HTTPException(status_code=500, detail=f"Some error occurred: {e}")
        
 
+from fastapi.responses import JSONResponse
+
 @router.delete("/{task_id}")
 async def delete_task(task_id: str):
     try:
@@ -58,13 +61,14 @@ async def delete_task(task_id: str):
         if not existing_doc:
             raise HTTPException(status_code=404, detail="Task does not exist")
 
-        # If you want to fully delete:
         resp = collection.delete_one({"_id": id})
         if resp.deleted_count == 1:
-            return {"status_code": 200, "message": "Task Deleted Successfully"}
+            return JSONResponse(
+                status_code=200,
+                content={"status_code": 200, "message": "Task Deleted Successfully"}
+            )
         else:
             raise HTTPException(status_code=500, detail="Failed to delete the task")
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Some error occurred: {e}")
 

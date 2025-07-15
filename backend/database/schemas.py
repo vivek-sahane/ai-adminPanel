@@ -1,7 +1,8 @@
 def individual_data(ai):
     return {
-        "id": str(ai["_id"]),
+        "_id": str(ai["_id"]),
         "title": ai["title"],
+        "category": ai["category"],
         "description":ai["description"],
         "price": ai["price"],
         "rating": ai["rating"],

@@ -1,46 +1,24 @@
-import { useState, useEffect } from 'react'
-import { fetchAllItems, createItem } from './api'
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Dashboard from './pages/Dashboard';
+import Edit from './pages/Edit';
+
 
 function App() {
-  const [items, setItems] = useState([])
-
-  useEffect(() => {
-    fetchAllItems()
-    .then(setItems)
-    .catch(console.error);
-  },[]);
 
 
   return (
-    <div>
-        <h1>My Items</h1>
-        {items.map((item) => (
-          <div key={item.id}>
-            <strong>{items.title}</strong> - {item.description}
-          </div>
-        ))}
-        <button 
-          onClick={() => 
-            createItem({
-              title: "New Item",
-              category: "test",
-              description: "A test item",
-              price: 100,
-              rating: 5,
-              tags: ["test"],
-              reviews: ["Great!"],
-              images: ["https://example.com"],
-              sold: 0,
-            }).then((created) => {
-              console.log("Created:", created);
-              setItems((prev) => [...prev, created]);
-            })
-        }
-        >
-          create Item
-        </button>
-    </div>
+    <Router>
+      <Navbar />
+      <div className='p-4 max-w-6xl mx-auto'>
+        <Routes>
+          <Route path="/" element={<Dashboard/>}/>
+          <Route path='/edit/:id' element={<Edit/>} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
-export default App
+export default App;
