@@ -1,11 +1,24 @@
 from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from configrations import collection
 from database.schemas import all_tasks
 from database.models import AI
 from bson.objectid import ObjectId
 from datetime import datetime
 
+
 app = FastAPI()
+
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"], #React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
 router = APIRouter()
 
 @router.get("/")
