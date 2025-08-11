@@ -13,13 +13,27 @@ export default function Create() {
     rating: 0,
     tags: [],
     reviews: [],
-    images: [],
+    images: [], // Will hold File objects
     sold: 0,
   });
 
   const [newTag, setNewTag] = useState("");
-  const [newImage, setNewImage] = useState("");
   const [newReview, setNewReview] = useState("");
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setForm((prev) => ({
+      ...prev,
+      images: [...prev.images, ...files], // Append new files
+    }));
+  };
+
+  const removeImage = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,6 +55,7 @@ export default function Create() {
         onSubmit={handleSubmit}
         className="bg-white rounded-lg shadow-lg p-6 space-y-4"
       >
+        {/* Title */}
         <div>
           <label className="block text-purple-700 font-semibold">Title</label>
           <input
@@ -52,6 +67,7 @@ export default function Create() {
           />
         </div>
 
+        {/* Category */}
         <div>
           <label className="block text-purple-700 font-semibold">Category</label>
           <input
@@ -63,6 +79,7 @@ export default function Create() {
           />
         </div>
 
+        {/* Description */}
         <div>
           <label className="block text-purple-700 font-semibold">Description</label>
           <textarea
@@ -74,13 +91,16 @@ export default function Create() {
           />
         </div>
 
+        {/* Price & Rating */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-purple-700 font-semibold">Price ($)</label>
             <input
               type="number"
               value={form.price}
-              onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setForm({ ...form, price: parseFloat(e.target.value) })
+              }
               className="w-full border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-purple-400"
               required
             />
@@ -93,7 +113,9 @@ export default function Create() {
               max="5"
               min="0"
               value={form.rating}
-              onChange={(e) => setForm({ ...form, rating: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setForm({ ...form, rating: parseFloat(e.target.value) })
+              }
               className="w-full border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-purple-400"
               required
             />
@@ -148,60 +170,35 @@ export default function Create() {
           </div>
         </div>
 
-        {/* Images */}
+        {/* Images - Local Upload */}
         <div>
-          <label className="block text-purple-700 font-semibold">Images URLs</label>
-          <div className="space-y-2 mt-2">
-            {form.images.map((url, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      images: form.images.map((u, i) =>
-                        i === idx ? e.target.value : u
-                      ),
-                    })
-                  }
-                  className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          <label className="block text-purple-700 font-semibold">
+            Upload Images
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageChange}
+            className="mt-2"
+          />
+          <div className="flex flex-wrap gap-4 mt-4">
+            {form.images.map((file, idx) => (
+              <div key={idx} className="relative">
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt="preview"
+                  className="w-24 h-24 object-cover rounded"
                 />
                 <button
                   type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      images: form.images.filter((_, i) => i !== idx),
-                    })
-                  }
-                  className="text-red-500 hover:text-red-700"
+                  onClick={() => removeImage(idx)}
+                  className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded"
                 >
                   ✕
                 </button>
               </div>
             ))}
-          </div>
-          <div className="flex mt-2">
-            <input
-              type="text"
-              value={newImage}
-              onChange={(e) => setNewImage(e.target.value)}
-              className="flex-1 border rounded-l px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
-              placeholder="Add image URL"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (newImage.trim()) {
-                  setForm({ ...form, images: [...form.images, newImage.trim()] });
-                  setNewImage("");
-                }
-              }}
-              className="bg-purple-500 text-white px-4 rounded-r hover:bg-purple-600"
-            >
-              +
-            </button>
           </div>
         </div>
 
@@ -251,7 +248,10 @@ export default function Create() {
               type="button"
               onClick={() => {
                 if (newReview.trim()) {
-                  setForm({ ...form, reviews: [...form.reviews, newReview.trim()] });
+                  setForm({
+                    ...form,
+                    reviews: [...form.reviews, newReview.trim()],
+                  });
                   setNewReview("");
                 }
               }}
@@ -262,12 +262,15 @@ export default function Create() {
           </div>
         </div>
 
+        {/* Sold */}
         <div>
           <label className="block text-purple-700 font-semibold">Sold</label>
           <input
             type="number"
             value={form.sold}
-            onChange={(e) => setForm({ ...form, sold: parseInt(e.target.value) })}
+            onChange={(e) =>
+              setForm({ ...form, sold: parseInt(e.target.value) })
+            }
             className="w-full border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
         </div>

@@ -12,13 +12,29 @@ export async function fetchAllItems() {
 
 // POST: Create new item
 export async function createItem(item) {
+
+    const formData = new FormData();
+    for( let key in item) {
+        if(key == "images") {
+            // images is an array of files
+            item.images.forEach(file => formData.append("images", file));
+        }
+        else if(Array.isArray(item[key])) {
+            // tags/ reviews arrays
+            item[key].forEach(val => formData.append(key, val));
+        }
+        else{
+            formData.append(key, item[key]);
+        }
+    }
+
+
     const res = await fetch(`${API_BASE_URL}/`,{
         method: "POST",
-        headers: {
-            "Content-Type":"application/json",
-        },
-        body: JSON.stringify(item),
+        body: formData
     });
+
+
     if(!res.ok) {
         throw new Error("Failed to create item");
     }

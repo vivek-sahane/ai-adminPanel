@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from configrations import collection
 from database.schemas import all_tasks
@@ -6,6 +6,12 @@ from database.models import AI
 from bson.objectid import ObjectId
 from datetime import datetime
 from fastapi.responses import JSONResponse
+
+#cloudinary
+import cloudinary.uploader
+from cloudinary_config import cloudinary
+
+from typing import List
 
 
 app = FastAPI()
@@ -28,13 +34,50 @@ async def get_all_ais():
     return all_tasks(data)
 
 @router.post("/")
-async def create_task(new_task : AI):
+async def create_task(
+    title: str = Form(...),
+    category: str = Form(...),
+    description: str = Form(...),
+    price: int = Form(...),
+    rating: float = Form(...),
+    tags: List[str] = Form(...),
+    reviews: List[str] = Form(...),
+    sold: int = Form(...),
+    images: List[UploadFile] = File(...) # multiple files
+):
     try:
-        resp = collection.insert_one(dict(new_task))
-        return {"status_code":200, "id":str(resp.inserted_id)}
+
+        #Upload all images to Cloudinary
+
+        uploaded_urls = []
+        for image in images:
+            upload_result = cloudinary.uploader.upload(image.file, folder="ecommerce")
+            uploaded_urls.append(upload_result.get("secure_url"))
+
+        # Create MongoDB document
+        new_task = {
+            "title" : title,
+            "category" : category,
+            "description" : description,
+            "price" : price,
+            "rating" : rating,
+            "tags" : tags,
+            "reviews" : reviews,
+            "images" : uploaded_urls,
+            "sold" : sold
+        }    
+
+        resp = collection.insert_one(new_task)
+        return {"status_code":200, "id":str(resp.inserted_id), "images": uploaded_urls}
     except Exception as e:
         return HTTPException(status_code=500, detail=f"Some error occured {e}")
     
+
+
+
+
+
+
 @router.put("/{task_id}")
 async def updated_task(task_id: str, updated_task: AI):
     try:
