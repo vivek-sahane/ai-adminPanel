@@ -41,16 +41,35 @@ export async function createItem(item) {
     return await res.json();
 }
 
-// PUT: Update an item by ID
-export async function updateItem(id,updatedData) {
-    const res = await fetch(`${API_BASE_URL}/${id}`,{
+export async function updateItem(id, updatedData) {
+    const formData = new FormData();
+
+    for (let key in updatedData) {
+        if (key === "images" &&  updatedData.images?.length > 0) {
+            Array.from(updatedData.images).forEach(file => formData.append("images", file));
+        }
+        else if (key === "existing_images" && updatedData.existing_images?.length > 0) {
+            updatedData.existing_images.forEach(url => formData.append("existing_images", url));
+        }
+        else if (Array.isArray(updatedData[key])) {
+            updatedData[key].forEach(val => formData.append(key, val));
+        }
+        else if (updatedData[key] !== undefined && updatedData[key] !== null) {
+            formData.append(key, updatedData[key]);
+        }
+    }
+
+    const res = await fetch(`${API_BASE_URL}/${id}`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(updatedData),
+        body: formData
     });
-    if(!res.ok) throw new Error("Failed to update item");
+
+    if (!res.ok) throw new Error("Failed to update item");
     return await res.json();
 }
+
+
+
 
 // DELETE: Delete an item by ID
 export async function deleteItem(id) {

@@ -7,11 +7,12 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from fastapi.responses import JSONResponse
 
+
 #cloudinary
-import cloudinary.uploader
+from cloudinary.uploader import upload as cloudinary_upload
 from cloudinary_config import cloudinary
 
-from typing import List
+from typing import List, Optional
 
 
 app = FastAPI()
@@ -74,27 +75,59 @@ async def create_task(
     
 
 
-
-
-
-
 @router.put("/{task_id}")
-async def updated_task(task_id: str, updated_task: AI):
+async def updated_task(
+        task_id: str, 
+        title: str = Form(...),
+        category: str = Form(...),
+        description: str = Form(...),
+        price: int = Form(...),
+        rating: float = Form(...),
+        tags: List[str] = Form([]),
+        reviews: List[str] = Form([]),
+        sold: int = Form(...),
+        existing_images: Optional[List[str]] = Form([]),    # URLs user wants to keep
+        images: Optional[List[UploadFile]] = File(None)          # New images to uplod
+    ):
+
     try:
         id = ObjectId(task_id)
         exesting_doc = collection.find_one({"_id": id})
         if not exesting_doc:
             return HTTPException(status_code=404, detail="Task does not exist")
 
-        # updated_at line removed, since you mentioned you don't want to store it
-        resp = collection.update_one({"_id": id}, {"$set": dict(updated_task)})
+        # Upload new images to cloudinary
+        uploaded_urls = []
+        if images:
+            for image in images:
+                result = cloudinary_upload(image.file, folder="items")
+                uploaded_urls.append(result["secure_url"])
+
+        # Combine existing + new uploaded URLs
+        final_image_list = (existing_images or []) + uploaded_urls
+
+        # Update MongoDb
+        update_data = {
+            "title": title,
+            "category": category,
+            "description": description,
+            "price": price,
+            "rating": rating,
+            "tags": tags,
+            "reviews": reviews,
+            "images" : final_image_list,
+            "sold": sold
+        }        
+
+        collection.update_one({"_id":id}, {"$set": update_data})
+
         return {"status_code": 200, "message": "Task Updated Successfully"}
 
     except Exception as e:
         return HTTPException(status_code=500, detail=f"Some error occurred: {e}")
        
 
-from fastapi.responses import JSONResponse
+
 
 @router.delete("/{task_id}")
 async def delete_task(task_id: str):

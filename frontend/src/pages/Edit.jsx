@@ -5,6 +5,7 @@ import { fetchAllItems, updateItem } from "../api";
 export default function Edit() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [form, setForm] = useState({
     title: "",
     category: "",
@@ -13,9 +14,12 @@ export default function Edit() {
     rating: 0,
     tags: [],
     reviews: [],
-    images: [],
     sold: 0,
   });
+
+  const [existingImages, setExistingImages] = useState([]); // URLs from DB
+  const [newImages, setNewImages] = useState([]); // Files to upload
+
   const [loading, setLoading] = useState(true);
 
   // Load the item details
@@ -25,11 +29,16 @@ export default function Edit() {
         const found = items.find((item) => item._id === id);
         if (found) {
           setForm({
-            ...found,
+            title: found.title,
+            category: found.category,
+            description: found.description,
+            price: found.price,
+            rating: found.rating,
             tags: found.tags || [],
             reviews: found.reviews || [],
-            images: found.images || [],
+            sold: found.sold,
           });
+          setExistingImages(found.images || []);
         }
       })
       .finally(() => setLoading(false));
@@ -65,20 +74,30 @@ export default function Edit() {
     }));
   };
 
+  const handleRemoveExistingImage = (index) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleNewImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    setNewImages((prev) => [...prev, ...files]);
+  };
+
+  const handleRemoveNewImage = (index) => {
+    setNewImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await updateItem(id, {
-        title: form.title,
-        category: form.category,
-        description: form.description,
-        price: Number(form.price) || 0,
-        rating: Number(form.rating) || 0,
+        ...form,
         tags: form.tags.map((t) => t.trim()).filter(Boolean),
         reviews: form.reviews.map((r) => r.trim()).filter(Boolean),
-        images: form.images.map((i) => i.trim()).filter(Boolean),
-        sold: Number(form.sold) || 0,
+        existing_images: existingImages, // Keep these URLs
+        images: newImages, // New files
       });
+
       alert("Item updated successfully!");
       navigate("/");
     } catch (err) {
@@ -98,6 +117,7 @@ export default function Edit() {
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-6"
       >
+        {/* Left column: Basic info */}
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -198,38 +218,53 @@ export default function Edit() {
           </div>
         </div>
 
-        {/* Images and Reviews */}
+        {/* Right column: Images & reviews */}
         <div className="space-y-4">
+          {/* Existing images */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Images
+              Existing Images
             </label>
-            {form.images.map((url, i) => (
+            {existingImages.map((url, i) => (
               <div key={i} className="flex items-center space-x-2 mt-1">
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => handleListChange("images", i, e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-md p-2"
-                />
+                <img src={url} alt="preview" className="w-16 h-16 object-cover rounded" />
                 <button
                   type="button"
-                  onClick={() => handleRemoveField("images", i)}
+                  onClick={() => handleRemoveExistingImage(i)}
                   className="text-red-600 hover:text-red-800"
                 >
                   ✕
                 </button>
               </div>
             ))}
-            <button
-              type="button"
-              onClick={() => handleAddField("images")}
-              className="mt-2 inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
-            >
-              + Add Image
-            </button>
           </div>
 
+          {/* New image upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Add New Images
+            </label>
+            <input
+              type="file"
+              multiple
+              onChange={handleNewImageSelect}
+              className="mt-1"
+            />
+            {newImages.map((file, i) => (
+              <div key={i} className="flex items-center space-x-2 mt-1">
+                <span className="text-sm">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveNewImage(i)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Reviews */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Reviews
@@ -261,6 +296,7 @@ export default function Edit() {
           </div>
         </div>
 
+        {/* Save */}
         <div className="md:col-span-2 text-center">
           <button
             type="submit"
