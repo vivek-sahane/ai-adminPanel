@@ -8,9 +8,15 @@ load_dotenv()
 
 # Get the URI from the .env file
 uri = os.getenv("MONGODB_URI")
+database_name = os.getenv("DATABASE_NAME")
+collection_name = os.getenv("COLLECTION_NAME")
 
 # Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
 
-db = client["ai_assistant"]
-collection = db["ai_assistant"]
+
+# Select database and collection
+db = client[database_name]
+collection = db[collection_name]
+
+print("✅ Connected to MongoDB Atlas!")

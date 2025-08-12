@@ -1,15 +1,15 @@
 def individual_data(ai):
     return {
-        "_id": str(ai["_id"]),
-        "title": ai["title"],
-        "category": ai["category"],
-        "description":ai["description"],
-        "price": ai["price"],
-        "rating": ai["rating"],
-        "tags": ai["tags"],
-        "reviews":ai["reviews"],
-        "images": ai["images"],
-        "sold": ai["sold"]
+        "_id": str(ai.get("_id", "")),
+        "title": ai.get("title", ""),
+        "category": ai.get("category", ""),
+        "description": ai.get("description", ""),
+        "price": ai.get("price", 0),
+        "rating": ai.get("rating", 0),
+        "tags": ai.get("tags", []),
+        "reviews": ai.get("reviews", []),
+        "images": ai.get("images", []),
+        "sold": ai.get("sold", 0)
     }
 
 def all_tasks(ais):
